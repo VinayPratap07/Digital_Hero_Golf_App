@@ -98,6 +98,15 @@ Server-side:
 `STRIPE_MONTHLY_PRICE_ID`
 `STRIPE_YEARLY_PRICE_ID`
 
+## Stripe Test
+
+Stripe Test Mode, use this card for a successful payment:
+
+Card number: 4242 4242 4242 4242
+Expiry: 12/34
+CVC: 123
+ZIP: 110001
+
 ## Table Schemas
 
 ### `profiles`
