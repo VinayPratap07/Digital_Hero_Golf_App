@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+body {
+  background-color: #eef2ec;
+}
+
+/* Modern Standard (Firefox & modern browsers) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #1a1a1a #f4f0eb;
+}
+
+/* WebKit / Chromium Browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Scrollbar Track (matches the warm cream background) */
+::-webkit-scrollbar-track {
+  background: #f4f0eb;
+}
+
+/* Scrollbar Thumb (deep charcoal pill) */
+::-webkit-scrollbar-thumb {
+  background-color: #2b2b2b;
+  border-radius: 9999px;
+  /* Adds breathing room to create a floating pill look */
+  border: 2px solid #f4f0eb;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover State */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #000000;
+}
