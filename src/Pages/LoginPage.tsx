@@ -17,7 +17,7 @@ export default function Login() {
     mutationFn: () => logIn(formData.email, formData.password),
 
     onSuccess: async (data) => {
-      const { data: subscription, error: subscriptionError } = await supabase
+      const { error: subscriptionError } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", data.user.id)
@@ -25,7 +25,7 @@ export default function Login() {
 
       if (subscriptionError) {
         console.error(subscriptionError.message);
-        return subscription;
+        return;
       }
 
       navigate("/");
