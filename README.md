@@ -98,7 +98,192 @@ Server-side:
 `STRIPE_MONTHLY_PRICE_ID`
 `STRIPE_YEARLY_PRICE_ID`
 
-Never expose service-role or Stripe secret keys in the frontend.
+## Table Schemas
+
+### `profiles`
+
+Stores application user profiles and roles.
+
+| Column       | Type        |
+| ------------ | ----------- |
+| `id`         | uuid        |
+| `name`       | text        |
+| `role`       | text        |
+| `created_at` | timestamptz |
+| `updated_at` | timestamptz |
+
+> `id` references `auth.users.id`.
+
+### `subscriptions`
+
+Stores user subscription and Stripe information.
+
+| Column                   | Type        |
+| ------------------------ | ----------- |
+| `id`                     | uuid        |
+| `user_id`                | uuid        |
+| `plan`                   | text        |
+| `status`                 | text        |
+| `current_period_start`   | timestamptz |
+| `current_period_end`     | timestamptz |
+| `created_at`             | timestamptz |
+| `updated_at`             | timestamptz |
+| `stripe_customer_id`     | text        |
+| `stripe_subscription_id` | text        |
+
+### `golf_scores`
+
+Stores user Stableford scores.
+
+| Column       | Type        |
+| ------------ | ----------- |
+| `id`         | uuid        |
+| `user_id`    | uuid        |
+| `score_date` | date        |
+| `score`      | int4        |
+| `created_at` | timestamptz |
+| `updated_at` | timestamptz |
+
+### `charities`
+
+Stores available charities.
+
+| Column        | Type        |
+| ------------- | ----------- |
+| `id`          | uuid        |
+| `name`        | text        |
+| `description` | text        |
+| `image_url`   | text        |
+| `is_active`   | boolean     |
+| `created_at`  | timestamptz |
+| `isFeatured`  | boolean     |
+
+### `charity_events`
+
+Stores charity events.
+
+| Column        | Type        |
+| ------------- | ----------- |
+| `id`          | uuid        |
+| `charity_id`  | uuid        |
+| `title`       | text        |
+| `description` | text        |
+| `event_date`  | timestamptz |
+| `location`    | text        |
+| `created_at`  | timestamptz |
+
+### `charity_selections`
+
+Stores the charity selected by each user.
+
+| Column                    | Type        |
+| ------------------------- | ----------- |
+| `id`                      | uuid        |
+| `user_id`                 | uuid        |
+| `charity_id`              | uuid        |
+| `contribution_percentage` | numeric     |
+| `created_at`              | timestamptz |
+| `updated_at`              | timestamptz |
+
+### `charity_contributions`
+
+Stores charity contribution records.
+
+| Column                    | Type        |
+| ------------------------- | ----------- |
+| `id`                      | uuid        |
+| `user_id`                 | uuid        |
+| `charity_id`              | uuid        |
+| `subscription_id`         | uuid        |
+| `amount`                  | numeric     |
+| `contribution_percentage` | numeric     |
+| `created_at`              | timestamptz |
+| `stripe_invoice_id`       | text        |
+
+### `draws`
+
+Stores monthly draw information.
+
+| Column            | Type        |
+| ----------------- | ----------- |
+| `id`              | uuid        |
+| `year`            | int4        |
+| `month`           | int4        |
+| `draw_type`       | text        |
+| `status`          | text        |
+| `draw_numbers`    | int4[]      |
+| `simulation_data` | jsonb       |
+| `created_at`      | timestamptz |
+| `published_at`    | timestamptz |
+
+### `draw_entries`
+
+Stores user entries for each draw.
+
+| Column       | Type        |
+| ------------ | ----------- |
+| `id`         | uuid        |
+| `draw_id`    | uuid        |
+| `user_id`    | uuid        |
+| `scores`     | int4[]      |
+| `created_at` | timestamptz |
+
+### `draw_results`
+
+Stores draw results and winnings.
+
+| Column            | Type        |
+| ----------------- | ----------- |
+| `id`              | uuid        |
+| `draw_id`         | uuid        |
+| `user_id`         | uuid        |
+| `draw_entry_id`   | uuid        |
+| `match_type`      | text        |
+| `matched_numbers` | int4[]      |
+| `prize_amount`    | numeric     |
+| `created_at`      | timestamptz |
+
+### `prize_pools`
+
+Stores prize pool allocation.
+
+| Column            | Type    |
+| ----------------- | ------- |
+| `id`              | uuid    |
+| `draw_id`         | uuid    |
+| `match_type`      | int4    |
+| `percentage`      | numeric |
+| `pool_amount`     | numeric |
+| `rollover_amount` | numeric |
+
+### `winner_verifications`
+
+Stores winner verification requests.
+
+| Column           | Type        |
+| ---------------- | ----------- |
+| `id`             | uuid        |
+| `draw_result_id` | uuid        |
+| `proof_url`      | text        |
+| `status`         | text        |
+| `admin_notes`    | text        |
+| `reviewed_by`    | uuid        |
+| `reviewed_at`    | timestamptz |
+| `created_at`     | timestamptz |
+
+### `payouts`
+
+Stores winner payout information.
+
+| Column              | Type        |
+| ------------------- | ----------- |
+| `id`                | uuid        |
+| `draw_result_id`    | uuid        |
+| `amount`            | numeric     |
+| `status`            | text        |
+| `payment_reference` | text        |
+| `paid_at`           | timestamptz |
+| `created_at`        | timestamptz |
 
 ## PRD Alignment
 
