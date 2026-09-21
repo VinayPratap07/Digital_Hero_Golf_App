@@ -25,7 +25,7 @@ export default function Login() {
 
       if (subscriptionError) {
         console.error(subscriptionError.message);
-        return;
+        return subscription;
       }
 
       navigate("/");
