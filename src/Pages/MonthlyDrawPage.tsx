@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { FiAward, FiCheckCircle, FiArrowRight, FiInfo } from "react-icons/fi";
 import { DrawHeader } from "../Component/DrawHeader";
 import { PrizePoolSection, type PrizeTier } from "../Component/PrizePool";
-import { CharitySection } from "../Component/CharitySection";
 import ScoresSection, { type ScoreEntry } from "../Component/ScoresSection";
 import { getMyScores } from "../Services/Score.service";
 import { getLatestDraw } from "../Services/DrawResult.service";
@@ -335,16 +334,6 @@ export default function MonthlyDraw() {
       <PrizePoolSection
         monthName={currentMonthName}
         tiers={dynamicTiers.length > 0 ? dynamicTiers : SAMPLE_PRIZES}
-      />
-
-      {/* Partner Charity Section */}
-      <CharitySection
-        charity={{
-          name: "Teach Every Child Foundation",
-          contributionPercentage: 10,
-        }}
-        onViewCharity={() => {}}
-        onChangeCharity={() => {}}
       />
     </div>
   );
