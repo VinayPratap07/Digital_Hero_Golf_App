@@ -45,12 +45,14 @@ Use these accounts for evaluation:
 
 **User**
 
-- Email: Can be created through normal signup and login process
+- User: Can be created through normal signup and login process
 
 **Admin**
 
 - Email: `admin@gmail.com`
 - Password: `checkout`
+
+  The Admin Panel can be accessed by an authenticated admin user through their profile. An admin can click the Admin button in their profile to navigate to the Admin Panel.
 
 ## Important Routes
 
