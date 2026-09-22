@@ -7,6 +7,7 @@ import {
   HiOutlineArrowTrendingUp,
   HiOutlineDocumentCheck,
 } from "react-icons/hi2";
+import { Link } from "react-router-dom";
 
 interface Step {
   stepNumber: string;
@@ -219,13 +220,13 @@ export const HowItWorks = () => {
               </div>
 
               <div className="pt-2">
-                <a
-                  href="#charity"
+                <Link
+                  to="/charity"
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-neutral-800 active:scale-95"
                 >
                   <span>Select Your Charity</span>
                   <HiOutlineArrowRight className="h-3.5 w-3.5" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>
