@@ -8,12 +8,13 @@ import ScoresSection, { type ScoreEntry } from "../Component/ScoresSection";
 import { getMyScores } from "../Services/Score.service";
 import { getLatestDraw } from "../Services/DrawResult.service";
 
-// --- Flexible API Contracts ---
+// --- Concrete API Contracts (Aligned to Server Response) ---
 export interface LatestDrawPrizePool {
+  id: string;
   match_type: number;
-  percentage?: number;
+  percentage: number;
   pool_amount: number;
-  rollover_amount?: number;
+  rollover_amount: number;
 }
 
 export interface DrawMatchResult {
@@ -23,40 +24,27 @@ export interface DrawMatchResult {
   prize_amount: number;
 }
 
-export interface UserDrawResultNested {
-  has_won?: boolean;
-  total_prize?: number;
-  matches?: DrawMatchResult[];
+export interface UserDrawResult {
+  has_won: boolean;
+  total_prize: number;
+  matches: DrawMatchResult[];
 }
 
 export interface LatestDrawItem {
-  id?: string;
-  year?: number;
-  month?: number;
-  draw_type?: string;
+  id: string;
+  year: number;
+  month: number;
+  draw_type: string;
   status: string;
   winning_numbers?: number[];
   published_at?: string | null;
 }
 
 export interface LatestDrawApiResponse {
-  success?: boolean;
+  success: boolean;
   draw: LatestDrawItem | null;
   prize_pools: LatestDrawPrizePool[];
-  // Supports legacy/nested format:
-  result?: UserDrawResultNested | null;
-  // Supports flat/variant format:
-  user_result?: DrawMatchResult | null;
-  user_won?: boolean;
-  user_prize?: number;
-  is_authenticated?: boolean;
-}
-
-// Normalized UI view model
-interface NormalizedUserResult {
-  hasWon: boolean;
-  totalPrize: number;
-  matches: DrawMatchResult[];
+  result: UserDrawResult | null;
 }
 
 const MONTH_NAMES = [
@@ -72,13 +60,7 @@ const MONTH_NAMES = [
   "October",
   "November",
   "December",
-];
-
-const SAMPLE_PRIZES: PrizeTier[] = [
-  { matchCount: 5, amount: "₹50,000" },
-  { matchCount: 4, amount: "₹12,000" },
-  { matchCount: 3, amount: "₹2,500" },
-];
+] as const;
 
 function formatCurrencyINR(amount: number = 0): string {
   return new Intl.NumberFormat("en-IN", {
@@ -102,7 +84,7 @@ export default function MonthlyDraw() {
     queryFn: getMyScores,
   });
 
-  // 2. Fetch Latest Draw & Win Evaluation
+  // 2. Fetch Latest Draw & Results
   const {
     data: latestDrawData,
     isLoading: isDrawLoading,
@@ -114,41 +96,13 @@ export default function MonthlyDraw() {
   });
 
   const activeDraw = latestDrawData?.draw ?? null;
+  const userResult = latestDrawData?.result ?? {
+    has_won: false,
+    total_prize: 0,
+    matches: [],
+  };
 
-  // Normalize inconsistent user outcome data schemas
-  const userResult = useMemo<NormalizedUserResult>(() => {
-    if (!latestDrawData) {
-      return { hasWon: false, totalPrize: 0, matches: [] };
-    }
-
-    // Format A: Flat structure (user_won, user_prize, user_result)
-    if (typeof latestDrawData.user_won === "boolean") {
-      const matches = latestDrawData.user_result
-        ? [latestDrawData.user_result]
-        : [];
-      return {
-        hasWon: latestDrawData.user_won,
-        totalPrize:
-          latestDrawData.user_prize ??
-          latestDrawData.user_result?.prize_amount ??
-          0,
-        matches,
-      };
-    }
-
-    // Format B: Nested structure (result.has_won, result.matches)
-    if (latestDrawData.result) {
-      return {
-        hasWon: Boolean(latestDrawData.result.has_won),
-        totalPrize: latestDrawData.result.total_prize ?? 0,
-        matches: latestDrawData.result.matches ?? [],
-      };
-    }
-
-    return { hasWon: false, totalPrize: 0, matches: [] };
-  }, [latestDrawData]);
-
-  // Derive display month: Draw month -> Active calendar month fallback
+  // Derive month strictly from draw payload, fallback to current calendar month
   const currentMonthName = useMemo(() => {
     if (activeDraw?.month && activeDraw.month >= 1 && activeDraw.month <= 12) {
       return MONTH_NAMES[activeDraw.month - 1];
@@ -156,12 +110,9 @@ export default function MonthlyDraw() {
     return MONTH_NAMES[new Date().getMonth()];
   }, [activeDraw?.month]);
 
-  // Map API prize pools to PrizePoolSection tiers
-  const dynamicTiers: PrizeTier[] = useMemo(() => {
-    if (
-      !latestDrawData?.prize_pools ||
-      latestDrawData.prize_pools.length === 0
-    ) {
+  // Compute dynamic tiers directly from API prize_pools
+  const prizeTiers: PrizeTier[] = useMemo(() => {
+    if (!latestDrawData?.prize_pools?.length) {
       return [];
     }
 
@@ -170,17 +121,15 @@ export default function MonthlyDraw() {
       .map((pool) => ({
         matchCount: pool.match_type,
         amount: formatCurrencyINR(
-          pool.pool_amount + (pool.rollover_amount || 0),
+          (pool.pool_amount ?? 0) + (pool.rollover_amount ?? 0),
         ),
       }));
   }, [latestDrawData?.prize_pools]);
 
-  const isPublished = activeDraw?.status?.toUpperCase() === "PUBLISHED";
-  const hasWinningNumbers = Boolean(
-    isPublished &&
-    activeDraw?.winning_numbers &&
-    activeDraw.winning_numbers.length > 0,
-  );
+  const isPublished = activeDraw?.status?.toLowerCase() === "published";
+  const winningNumbers = activeDraw?.winning_numbers ?? [];
+  const hasWinningNumbers = isPublished && winningNumbers.length > 0;
+  const isEntered = scores.length >= 5;
 
   if (isScoresLoading || isDrawLoading) {
     return (
@@ -202,14 +151,12 @@ export default function MonthlyDraw() {
     );
   }
 
-  const isEntered = scores.length >= 5;
-
   return (
     <div className="mx-auto my-22 w-full max-w-2xl space-y-6 rounded-3xl border border-neutral-200/80 bg-white p-6 shadow-sm sm:p-8">
       {/* Header */}
       <DrawHeader monthName={currentMonthName} />
 
-      {/* Case 1: Draw Not Scheduled / In Preparation */}
+      {/* State 1: Draw Not Yet Scheduled */}
       {!activeDraw && (
         <div className="flex items-center gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-50/50 p-4 text-xs text-neutral-600">
           <FiInfo className="h-4 w-4 shrink-0 text-neutral-400" />
@@ -220,7 +167,7 @@ export default function MonthlyDraw() {
         </div>
       )}
 
-      {/* Case 2: Draw Scheduled but Pending Publication */}
+      {/* State 2: Draw Scheduled but Pending Publication */}
       {activeDraw && !isPublished && (
         <div className="flex items-center justify-between rounded-2xl border border-amber-200/70 bg-amber-50/40 p-4 text-xs">
           <div className="flex items-center gap-2 font-medium text-amber-900">
@@ -231,13 +178,13 @@ export default function MonthlyDraw() {
             </span>
           </div>
           <span className="rounded-md bg-amber-100 px-2 py-0.5 font-bold uppercase tracking-wider text-[10px] text-amber-800">
-            {activeDraw.status.toUpperCase()}
+            {activeDraw.status}
           </span>
         </div>
       )}
 
-      {/* Winning Announcement Banner */}
-      {userResult.hasWon && (
+      {/* State 3: User Win Banner */}
+      {userResult.has_won && (
         <div className="flex flex-col gap-4 rounded-3xl border border-emerald-500/30 bg-emerald-50/20 p-5 sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -264,7 +211,7 @@ export default function MonthlyDraw() {
                 Prize Allocated
               </span>
               <p className="font-mono text-xl font-black text-neutral-950">
-                {formatCurrencyINR(userResult.totalPrize)}
+                {formatCurrencyINR(userResult.total_prize)}
               </p>
             </div>
           </div>
@@ -279,7 +226,7 @@ export default function MonthlyDraw() {
                 navigate("/draws/claim-verification", {
                   state: {
                     drawId: activeDraw?.id,
-                    totalPrize: userResult.totalPrize,
+                    totalPrize: userResult.total_prize,
                     monthName: currentMonthName,
                   },
                 })
@@ -293,7 +240,7 @@ export default function MonthlyDraw() {
         </div>
       )}
 
-      {/* Published Draw Winning Numbers */}
+      {/* State 4: Winning Numbers */}
       {hasWinningNumbers && (
         <div className="rounded-2xl border border-neutral-200/80 bg-neutral-50/60 p-4">
           <div className="mb-2.5 flex items-center justify-between">
@@ -302,11 +249,11 @@ export default function MonthlyDraw() {
             </span>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
               <FiCheckCircle className="h-3.5 w-3.5" />
-              {activeDraw?.status.toUpperCase()}
+              {activeDraw.status.toUpperCase()}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {activeDraw?.winning_numbers?.map((num) => {
+            {winningNumbers.map((num) => {
               const isMatched = userResult.matches.some((m) =>
                 m.matched_numbers?.includes(num),
               );
@@ -327,14 +274,11 @@ export default function MonthlyDraw() {
         </div>
       )}
 
-      {/* Scores Section */}
+      {/* User Scores Section */}
       <ScoresSection scores={scores} isEntered={isEntered} />
 
-      {/* Prize Pools */}
-      <PrizePoolSection
-        monthName={currentMonthName}
-        tiers={dynamicTiers.length > 0 ? dynamicTiers : SAMPLE_PRIZES}
-      />
+      {/* Live Prize Pools (No mock fallback) */}
+      <PrizePoolSection monthName={currentMonthName} tiers={prizeTiers} />
     </div>
   );
 }
