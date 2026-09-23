@@ -22,6 +22,7 @@ import CharitySelector from "./Pages/SelectCharityPage.tsx";
 import WinnerClaimVerificationPage from "./Pages/WinnerVerificaitonPage.tsx";
 import AdminVerificationsHubPage from "./Admin/VerifyWinner.tsx";
 import AboutUs from "./Pages/AboutUsPage.tsx";
+import PaymentSuccessPage from "./Component/SuccessPage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -107,6 +108,10 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Signup />,
+  },
+  {
+    path: "/subscription/success",
+    element: <PaymentSuccessPage />,
   },
 
   {
