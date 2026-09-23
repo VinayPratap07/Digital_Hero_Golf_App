@@ -1,11 +1,5 @@
 import React, { useMemo } from "react";
-import {
-  FiCheck,
-  FiX,
-  FiHome,
-  FiArrowRight,
-  FiRotateCcw,
-} from "react-icons/fi";
+import { FiCheck, FiX, FiHome } from "react-icons/fi";
 
 interface PaymentStatusPageProps {
   onNavigateHome?: () => void;
@@ -14,7 +8,6 @@ interface PaymentStatusPageProps {
 
 export const PaymentStatusPage: React.FC<PaymentStatusPageProps> = ({
   onNavigateHome = () => (window.location.href = "/"),
-  onNavigateRetry = () => (window.location.href = "/subscribe"),
 }) => {
   // Evaluates query params: ?status=success or ?status=failed / ?status=cancel
   const isSuccess = useMemo(() => {
